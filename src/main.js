@@ -12,8 +12,14 @@ app.use(i18n)
 app.use(router)
 app.mount('#app')
 
-// Register Service Worker for PWA
-if ('serviceWorker' in navigator) {
+// Service Worker for PWA: production only. In dev it would cache Vite's modules and keep
+// serving an old version of the app, so any worker left from earlier is removed.
+if ('serviceWorker' in navigator && import.meta.env.DEV) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => registration.unregister())
+  })
+  caches.keys().then((names) => names.forEach((name) => caches.delete(name)))
+} else if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     const swPath = `${import.meta.env.BASE_URL}sw.js`
     navigator.serviceWorker

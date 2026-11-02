@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wikidex-v1'
+const CACHE_NAME = 'wikidex-v2'
 
 // Determine base path from the service worker's location
 const BASE_PATH = self.location.pathname.substring(0, self.location.pathname.lastIndexOf('/') + 1)
@@ -73,6 +73,32 @@ self.addEventListener('fetch', (event) => {
 
   // Never cache the same-origin GBIF proxy
   if (url.pathname.startsWith('/gbif/')) {
+    return
+  }
+
+  // Pages (index.html): network first, so a new deployment is picked up right away.
+  // The cache is only the offline fallback. Hashed /assets/* files below stay cache-first.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200 && response.type === 'basic') {
+            const copy = response.clone()
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy))
+          }
+          return response
+        })
+        .catch(() =>
+          caches
+            .match(event.request)
+            .then(
+              (cached) =>
+                cached ||
+                caches.match(`${BASE_PATH}index.html`) ||
+                caches.match(`${BASE_PATH}404.html`),
+            ),
+        ),
+    )
     return
   }
 
