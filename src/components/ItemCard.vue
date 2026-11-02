@@ -1,7 +1,7 @@
 <template>
   <div
     class="card"
-    :class="{ 'card--compact': compact }"
+    :class="{ 'card--compact': compact, 'card--filtered': !visible }"
     :id="`${binomialName.replace(/ /g, '_')}`"
     :style="{ borderColor: categoryColor, backgroundColor: categoryBackgroundColor }"
   >
@@ -126,30 +126,25 @@
           <img src="/assets/mapoflife.svg" alt="MapOfLife" class="footer-icon" />
         </a>
 
-        <button
-          @click="copyShareLink"
-          class="footer-link footer-button"
-          :title="showCopiedTooltip ? 'Share link copied!' : 'Share this card'"
-        >
-          <img src="/assets/share.svg" alt="Share" class="footer-icon" />
-          <span v-if="showCopiedTooltip" class="copied-tooltip">Share link copied!</span>
-        </button>
+        <ShareButton :name="binomialName" :url="shareUrl" :title="$t('share-card')" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { fetchCardData } from '@/utils/fetchCardData'
+import { fetchCardData, peekCardCache } from '@/utils/fetchCardData'
 import {
   getCategoryColor,
   getCategoryBackgroundColor,
   getCategoryEmoji,
 } from '@/utils/assessCategory'
 import { useSettingsStore } from '@/stores/settings'
+import { useFiltersStore } from '@/stores/filters'
 import RangeMap from './RangeMap.vue'
+import ShareButton from './ShareButton.vue'
 import StatusIUCN from './StatusIUCN.vue'
 
 const props = defineProps({
@@ -165,6 +160,16 @@ const props = defineProps({
     type: String,
     default: 'plant',
   },
+  // Show and load the card whatever the filters are (used by the carousel, which filters itself)
+  ignoreFilters: {
+    type: Boolean,
+    default: false,
+  },
+  // Title of the collection (section) this card belongs to, for the section filter
+  collection: {
+    type: String,
+    default: '',
+  },
   compact: {
     type: Boolean,
     default: false,
@@ -175,10 +180,36 @@ const { locale, t } = useI18n()
 const settings = useSettingsStore()
 const cardData = ref(null)
 const loading = ref(true)
+let loadStarted = false
 const error = ref(null)
-const showCopiedTooltip = ref(false)
 
 // Use assessed category from API data when available, otherwise fall back to prop
+const filters = useFiltersStore()
+
+// Hidden (not unmounted) when filtered out, so loaded data and scroll anchors are kept.
+// Type/common-name filters can only match once the card data has loaded.
+const visible = computed(
+  () =>
+    props.ignoreFilters ||
+    filters.matches({
+      binomial: props.binomialName,
+      taxonName: cardData.value?.taxonName,
+      commonName: cardData.value?.commonName,
+      category: cardData.value ? currentCategory.value : null,
+    }),
+)
+
+// Lazy loading: while a filter is active, only query the data of cards that can match it.
+// What is known without network (binomial, locally cached data) is used to rule cards out;
+// a card whose type is still unknown must be loaded to find out.
+const shouldLoad = computed(() => {
+  if (props.ignoreFilters || !filters.isActive) return true
+  if (filters.section && filters.section !== props.collection) return false
+  const known = peekCardCache(props.binomialName, locale.value)
+  if (!filters.matchesName({ binomial: props.binomialName, ...known })) return false
+  return !filters.type || !known || known.assessedGroup === filters.type
+})
+
 const currentCategory = computed(() => {
   return cardData.value?.assessedGroup || props.group || 'unknown'
 })
@@ -200,18 +231,6 @@ const shareUrl = computed(() => {
   return `${baseUrl}#/User:${username}#${cardId}`
 })
 
-async function copyShareLink() {
-  try {
-    await navigator.clipboard.writeText(shareUrl.value)
-    showCopiedTooltip.value = true
-    setTimeout(() => {
-      showCopiedTooltip.value = false
-    }, 2000)
-  } catch (err) {
-    console.error('Failed to copy link:', err)
-  }
-}
-
 async function loadData() {
   loading.value = true
   error.value = null
@@ -219,6 +238,7 @@ async function loadData() {
   try {
     const data = await fetchCardData(props.binomialName, locale.value, props.qid)
     cardData.value = data
+    filters.setCategory(props.binomialName, data.assessedGroup)
   } catch (err) {
     error.value = t('status-loading-list-error')
     console.error(err)
@@ -227,17 +247,33 @@ async function loadData() {
   }
 }
 
-onMounted(() => {
-  loadData()
-})
+// Load once the card is allowed to (immediately when no filter is active, see shouldLoad)
+watch(
+  shouldLoad,
+  (allowed) => {
+    if (allowed && !loadStarted) {
+      loadStarted = true
+      loadData()
+    }
+  },
+  { immediate: true },
+)
 
 // Reload data when locale changes
 watch(locale, () => {
-  loadData()
+  if (loadStarted || shouldLoad.value) {
+    loadStarted = true
+    loadData()
+  }
 })
 </script>
 
 <style scoped>
+.card.card--filtered {
+  /* two classes: must beat `.card { display: flex }` defined below */
+  display: none;
+}
+
 .card {
   background-color: white;
   border: 3px solid #ddd;
@@ -288,7 +324,7 @@ watch(locale, () => {
   padding: 0.5rem 0.75rem;
 }
 
-.card--compact .footer-icon {
+.card--compact :deep(.footer-icon) {
   width: 20px;
 }
 
@@ -462,81 +498,5 @@ watch(locale, () => {
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
   min-height: 40px;
-}
-
-.footer-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.1rem;
-  border-radius: 4px;
-  transition:
-    background-color 0.2s ease,
-    transform 0.2s ease;
-  text-decoration: none;
-  position: relative;
-}
-
-.footer-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.footer-link:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  transform: scale(1.05);
-}
-
-.footer-link:focus {
-  outline: 2px solid #36c;
-  outline-offset: 2px;
-}
-
-.footer-icon {
-  width: 24px;
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
-}
-
-.footer-link:hover .footer-icon {
-  opacity: 1;
-}
-
-.copied-tooltip {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #333;
-  color: white;
-  padding: 0.5rem 0.75rem;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
-  margin-bottom: 0.5rem;
-  pointer-events: none;
-  animation: fadeIn 0.2s ease;
-}
-
-.copied-tooltip::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: #333;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
 }
 </style>

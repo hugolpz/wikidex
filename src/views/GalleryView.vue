@@ -9,15 +9,21 @@
     </div>
 
     <div v-else>
-      <!-- Sticky Collection Navigation -->
-      <CollectionNav :collections="collectionsData" />
+      <CardFilters v-if="!fullscreen" :collections="collectionsData" />
 
-      <div class="collections-container">
+      <!-- ?carousel : as many cards as the expanded view fits per row, ?duration=<seconds> between rolls (0 = manual) -->
+      <Carousel v-if="carouselMode" :collections="collectionsData" :duration="carouselDuration" />
+
+      <div v-if="!carouselMode" class="collections-container">
         <div
           v-for="(collection, index) in collectionsData"
           :key="collection.collectionTitle"
           :id="`collection-${index + 1}`"
           class="collection-section"
+          :class="{
+            'collection-section--filtered':
+              filters.section && filters.section !== collection.collectionTitle,
+          }"
         >
           <!-- collection Header -->
           <div class="collection-header">
@@ -29,6 +35,11 @@
                 page="Special:MyPage/WikiDex"
                 editintro="WikiDex/Guideline"
                 preload="WikiDex/Placeholder"
+              />
+              <ShareButton
+                :name="collection.collectionTitle"
+                :url="sectionUrl(collection.collectionTitle)"
+                :title="$t('share-section')"
               />
             </div>
             <div v-if="collection.lat && collection.lon" class="collection-coordinates">
@@ -52,6 +63,7 @@
               :key="item.binomial"
               :binomial-name="item.binomial"
               :qid="item.qid"
+              :collection="collection.collectionTitle"
               :group="item.category || item.group || 'unknown'"
               :compact="settings.compactView"
             />
@@ -63,19 +75,54 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { fetchDatalist } from '@/utils/fetchDatalist'
 import { useSettingsStore } from '@/stores/settings'
 import ItemCard from '@/components/ItemCard.vue'
 import EditDataButton from '@/components/EditDataButton.vue'
 import GlobeLocalisator from '@/components/GlobeLocalisator.vue'
-import CollectionNav from '@/components/CollectionNav.vue'
+import CardFilters from '@/components/CardFilters.vue'
+import ShareButton from '@/components/ShareButton.vue'
+import Carousel from '@/components/Carousel.vue'
+import { useFullscreenParam } from '@/utils/fullscreen'
+import { useFiltersStore } from '@/stores/filters'
 
 const route = useRoute()
+const router = useRouter()
 const { t } = useI18n()
 const settings = useSettingsStore()
+const filters = useFiltersStore()
+const fullscreen = useFullscreenParam()
+
+// Link to this page reduced to one section
+function sectionUrl(title) {
+  const { href } = router.resolve({ path: route.path, query: { section: title } })
+  return new URL(href, window.location.href).href
+}
+
+// ?carousel (or ?carousel=1) turns it on; ?carousel=0|false|off turns it off
+const carouselMode = computed(() => {
+  const value = route.query.carousel
+  return value !== undefined && !['0', 'false', 'off'].includes(String(value))
+})
+const carouselDuration = computed(() => {
+  const seconds = Number(route.query.duration)
+  return Number.isFinite(seconds) && route.query.duration !== undefined && seconds >= 0
+    ? seconds
+    : 30
+})
+
+// URL --> filters (e.g. #/User:Yug?q=pica&type=bird&section=Home). Done in setup, before any
+// card exists, so that cards only query the data of the items matching these filters.
+{
+  const { q, type, section } = route.query
+  if (q) filters.name = String(q)
+  if (type) filters.type = String(type)
+  if (section) filters.section = String(section)
+  if (filters.isActive) filters.expanded = true
+}
 const collectionsData = ref([])
 const loading = ref(true)
 const error = ref(null)
@@ -220,7 +267,7 @@ watch(
   /* border-radius: 12px; */
   padding: 1rem 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  scroll-margin-top: 100px; /* Space for sticky nav */
+  scroll-margin-top: 100px; /* Space for the sticky top bar */
 }
 
 .collection-header {
@@ -277,17 +324,6 @@ watch(
   display: none;
 }
 
-.gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 2rem;
-}
-
-.gallery-grid--compact {
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1rem;
-}
-
 @media (max-width: 768px) {
   .gallery-view {
     padding: 0;
@@ -310,16 +346,6 @@ watch(
   .collectionTitle {
     font-size: 1.5rem;
   }
-
-  .gallery-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.5rem;
-  }
-
-  .gallery-grid--compact {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 1rem;
-  }
 }
 
 @media (max-width: 480px) {
@@ -341,7 +367,35 @@ watch(
     font-size: 0.8rem;
     padding: 0.4rem 0.8rem;
   }
+}
+</style>
 
+<style>
+/* Unscoped: the card grid is shared with the carousel, which reads its column count from it */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.gallery-grid--compact {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .gallery-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .gallery-grid--compact {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
   .gallery-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1rem;
@@ -351,5 +405,11 @@ watch(
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 0.75rem;
   }
+}
+
+/* Unscoped: sections hidden by the section filter, or left with no visible card */
+.collection-section--filtered,
+.collection-section:has(.card):not(:has(.card:not(.card--filtered))) {
+  display: none;
 }
 </style>
