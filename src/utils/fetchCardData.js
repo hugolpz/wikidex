@@ -27,6 +27,14 @@ function writeCache(key, data) {
   }
 }
 
+/**
+ * Synchronously reads a card from the local cache, without any network request
+ * @returns {Object|null} The cached card data, or null if not cached / expired
+ */
+export function peekCardCache(binomialName, locale = 'en') {
+  return readCache(`${CACHE_PREFIX}${locale}:${binomialName}`)
+}
+
 export async function fetchCardData(binomialName, locale = 'en', qid = null) {
   const cacheKey = `${CACHE_PREFIX}${locale}:${binomialName}`
   const cached = readCache(cacheKey)
