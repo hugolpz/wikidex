@@ -71,6 +71,11 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  // Never cache the same-origin GBIF proxy
+  if (url.pathname.startsWith('/gbif/')) {
+    return
+  }
+
   event.respondWith(
     caches.match(event.request).then((response) => {
       // Return cached version if available

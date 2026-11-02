@@ -91,6 +91,9 @@ jobs:
     needs: build-toolforge
     if: github.ref == 'refs/heads/main'
     steps:
+      - name: Checkout (server.js, package.json)
+        uses: actions/checkout@v4
+
       - name: Download Toolforge artifact
         uses: actions/download-artifact@v4
         with:
@@ -115,10 +118,19 @@ jobs:
           ssh -T -i id_rsa -o StrictHostKeyChecking=no ${{ secrets.TOOLFORGE_USERNAME }}@${{ secrets.TOOLFORGE_HOST }} "cd /data/project/wikinaturalist/public_html && find . -mindepth 1 ! -name '.htaccess' -delete"
           rsync -avz --no-perms --omit-dir-times --delete --exclude='.htaccess' -e "ssh -T -i id_rsa -o StrictHostKeyChecking=no" dist/ ${{ secrets.TOOLFORGE_USERNAME }}@${{ secrets.TOOLFORGE_HOST }}:/data/project/wikinaturalist/public_html/
 
-      - name: Clean and redeploy Toolforge public_html directory (wikidex)
+      # wikidex runs as a Node webservice (server.js serves dist/ and proxies GBIF,
+      # see TOOLFORGE_DEPLOYMENT.md). Toolforge runs `npm start` from ~/www/js.
+      - name: Deploy Toolforge Node webservice (wikidex)
         run: |
-          ssh -T -i id_rsa -o StrictHostKeyChecking=no ${{ secrets.TOOLFORGE_USERNAME }}@${{ secrets.TOOLFORGE_HOST }} "cd /data/project/wikidex/public_html && find . -mindepth 1 ! -name '.htaccess' -delete"
-          rsync -avz --no-perms --omit-dir-times --delete --exclude='.htaccess' -e "ssh -T -i id_rsa -o StrictHostKeyChecking=no" dist/ ${{ secrets.TOOLFORGE_USERNAME }}@${{ secrets.TOOLFORGE_HOST }}:/data/project/wikidex/public_html/
+          SSH="ssh -T -i id_rsa -o StrictHostKeyChecking=no"
+          DEST=${{ secrets.TOOLFORGE_USERNAME }}@${{ secrets.TOOLFORGE_HOST }}
+          $SSH $DEST "mkdir -p /data/project/wikidex/www/js"
+          rsync -avz --no-perms --omit-dir-times --delete -e "$SSH" dist/ $DEST:/data/project/wikidex/www/js/dist/
+          rsync -avz --no-perms --omit-dir-times -e "$SSH" server.js package.json $DEST:/data/project/wikidex/www/js/
+
+      - name: Restart wikidex webservice
+        run: |
+          ssh -T -i id_rsa -o StrictHostKeyChecking=no ${{ secrets.TOOLFORGE_USERNAME }}@${{ secrets.TOOLFORGE_HOST }} "become wikidex webservice restart"
 
       - name: Cleanup SSH Key
         if: always()

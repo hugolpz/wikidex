@@ -3,8 +3,10 @@
  * Shared functions for interacting with the GBIF (Global Biodiversity Information Facility) API
  */
 
-// Base URL for the GBIF Species API
-const GBIF_API_BASE = 'https://api.gbif.org/v1/species'
+// Base URL for the GBIF API. On Toolforge the CSP forbids api.gbif.org, so the build
+// (.env.toolforge) points this to the same-origin proxy implemented in server.js.
+const GBIF_API_ROOT = import.meta.env.VITE_GBIF_API_BASE || 'https://api.gbif.org/v1'
+const GBIF_API_BASE = `${GBIF_API_ROOT}/species`
 
 /**
  * Matches a species binomial name to a GBIF Backbone taxonKey.
@@ -62,7 +64,7 @@ export async function getIucnStatus(taxonKey) {
  * @returns {Promise<Array>} - Array of occurrence objects with coordinates
  */
 export async function fetchOccurrences(taxonKey, limit = 300) {
-  const url = `https://api.gbif.org/v1/occurrence/search?taxonKey=${taxonKey}&hasCoordinate=true&limit=${limit}`
+  const url = `${GBIF_API_ROOT}/occurrence/search?taxonKey=${taxonKey}&hasCoordinate=true&limit=${limit}`
 
   try {
     const response = await fetch(url)
