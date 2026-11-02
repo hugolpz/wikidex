@@ -4,6 +4,7 @@ import GalleryView from '@/views/GalleryView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import { useSettingsStore } from '@/stores/settings'
 import { checkWikipageExists } from '@/utils/fetchDatalist'
+import i18n, { resolveLocale } from '@/i18n'
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -101,6 +102,16 @@ router.afterEach(() => {
 // Initialize watcher after router is ready
 router.isReady().then(() => {
   const settings = useSettingsStore()
+
+  // ?uselang= --> language (e.g. a link changed in place, back/forward). The other direction,
+  // language --> URL, is done by LanguageSelect.
+  watch(
+    () => router.currentRoute.value.query.uselang,
+    (value) => {
+      const locale = resolveLocale(Array.isArray(value) ? value[0] : value)
+      if (locale && locale !== i18n.global.locale.value) i18n.global.locale.value = locale
+    },
+  )
 
   watch(
     () => settings.wikimediaUsername,

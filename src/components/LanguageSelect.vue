@@ -1,11 +1,6 @@
 <template>
   <div class="language-selector">
-    <select
-      id="language-select"
-      v-model="selectedLocale"
-      class="language-select"
-      @change="changeLanguage"
-    >
+    <select id="language-select" v-model="locale" class="language-select" @change="changeLanguage">
       <option v-for="locale in Object.keys(languagesMenu)" :key="locale" :value="locale">
         {{ getLanguageName(locale) }}
       </option>
@@ -14,11 +9,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 
+// `locale` is the single source of truth, shared with the ?uselang= URL parameter
 const { locale } = useI18n()
-const selectedLocale = ref(locale.value)
+const route = useRoute()
+const router = useRouter()
 
 const languagesMenu = {
   en: 'English',
@@ -30,24 +27,16 @@ const languagesMenu = {
   zh: '中文',
 }
 
-const locales = Object.keys(languagesMenu)
-
 function getLanguageName(localeCode) {
   return languagesMenu[localeCode] || localeCode
 }
 
+// The saved language is applied at startup (see i18n/index.js); here the user picks one:
+// remember it, and mirror it in the URL.
 function changeLanguage() {
-  locale.value = selectedLocale.value
-  localStorage.setItem('preferred-locale', selectedLocale.value)
+  localStorage.setItem('preferred-locale', locale.value)
+  router.replace({ query: { ...route.query, uselang: locale.value } })
 }
-
-onMounted(() => {
-  const savedLocale = localStorage.getItem('preferred-locale')
-  if (savedLocale && locales.includes(savedLocale)) {
-    selectedLocale.value = savedLocale
-    locale.value = savedLocale
-  }
-})
 </script>
 
 <style scoped>

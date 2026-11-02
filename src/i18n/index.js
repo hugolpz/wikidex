@@ -7,7 +7,7 @@ const i18n = createI18n({
   messages: {
     en: {
       'app-install': 'Install',
-      'app-title-wikinaturalist': 'WikiNaturalist',
+      'app-title-wikidex': 'WikiDex',
       'app-title-wikidex': 'WikiDex',
       'app-tagline': 'Gallery of your biodiversity neighborhood, Wikimedia-boosted.',
       'settings-title': 'Settings',
@@ -23,12 +23,33 @@ const i18n = createI18n({
       'settings-auto-saved-message': 'Settings are automatically saved',
       'view-compact': 'Compact View',
       'view-expand': 'Expanded View',
+      'view-carousel': 'Carousel View',
+      'filters-title': 'Filters',
+      'filters-name': 'Name',
+      'filters-name-placeholder': 'Name (scientific or common)',
+      'filters-type': 'Type',
+      'filters-section': 'Section',
+      'filters-clear': 'Clear filters',
+      'filters-close': 'Close',
+      'fullscreen-hint': 'Click or tap for fullscreen',
+      'fullscreen-exit': 'Exit fullscreen',
+      'filters-pending': 'not loaded yet',
+      'filters-count': 'Cards shown / total',
+      'carousel-prev': 'Previous',
+      'carousel-next': 'Next',
+      'carousel-pause': 'Pause',
+      'carousel-play': 'Play',
+      'carousel-empty': 'No card to show.',
       'status-loading': 'Loading...',
       'status-loading-list': 'Loading species list...',
       'status-loading-list-error': 'Failed to load species data',
       'link-wikipedia': 'View on Wikipedia',
       'link-wikidata': 'View on Wikidata',
       'link-github': 'View source code on GitHub',
+      'share-section': 'Copy a link to this section',
+      'share-card': 'Copy a link to this card',
+      'share-copied': 'Link copied!',
+      'share-text': "Discover {name} in {user}'s WikiDex: {url}",
       'link-github-sr': 'GitHub Repository',
       'link-edit-list-logged-in': 'Edit your species list',
       'link-edit-list-logged-out': 'Login to Wikimedia to create a species list',
@@ -37,11 +58,11 @@ const i18n = createI18n({
       'settings-accounts-wikimedia-label': 'Wikimedia',
       'settings-accounts-wikimedia-placeholder': 'Your Wikimedia username (e.g., BeastsWatcher)',
       'settings-userscript-message':
-        'For a much smoother experience on Wikipedia, <a href="https://meta.wikimedia.org/w/index.php?title=Special:MyPage/global.js&editintro=WikiNaturalist%2FUserscript&action=edit">add the forager userscript</a>, then follow the red squirrel.',
+        'For a much smoother experience on Wikipedia, <a href="https://meta.wikimedia.org/w/index.php?title=Special:MyPage/global.js&editintro=WikiDex%2FUserscript&action=edit">add the forager userscript</a>, then follow the red squirrel.',
     },
     fr: {
       'app-install': 'Installer',
-      'app-title-wikinaturalist': 'WikiNaturalist',
+      'app-title-wikidex': 'WikiDex',
       'app-title-wikidex': 'WikiDex',
       'app-tagline': 'Galerie de la biodiversité de votre quartier, boostée par Wikimedia.',
       'settings-title': 'Paramètres',
@@ -58,12 +79,33 @@ const i18n = createI18n({
       'settings-auto-saved-message': 'Les paramètres sont enregistrés automatiquement',
       'view-compact': 'Vue compacte',
       'view-expand': 'Vue étendue',
+      'view-carousel': 'Vue carrousel',
+      'filters-title': 'Filtres',
+      'filters-name': 'Nom',
+      'filters-name-placeholder': 'Nom (scientifique ou commun)',
+      'filters-type': 'Type',
+      'filters-section': 'Section',
+      'filters-clear': 'Effacer les filtres',
+      'filters-close': 'Fermer',
+      'fullscreen-hint': 'Cliquez ou touchez pour le plein écran',
+      'fullscreen-exit': 'Quitter le plein écran',
+      'filters-pending': 'pas encore chargées',
+      'filters-count': 'Cartes affichées / total',
+      'carousel-prev': 'Précédent',
+      'carousel-next': 'Suivant',
+      'carousel-pause': 'Pause',
+      'carousel-play': 'Lecture',
+      'carousel-empty': 'Aucune carte à afficher.',
       'status-loading': 'Chargement...',
       'status-loading-list': 'Chargement de la liste des espèces...',
       'status-loading-list-error': "Impossible de charger les données de l'espèce",
       'link-wikipedia': 'Voir sur Wikipedia',
       'link-wikidata': 'Voir sur Wikidata',
       'link-github': 'Voir le code source sur GitHub',
+      'share-section': 'Copier un lien vers cette section',
+      'share-card': 'Copier un lien vers cette fiche',
+      'share-copied': 'Lien copié !',
+      'share-text': 'Découvrez {name} dans le WikiDex de {user} : {url}',
       'link-github-sr': 'Dépôt GitHub',
       'link-edit-list-logged-in': "Modifier votre liste d'espèces",
       'link-edit-list-logged-out': "Connexion à Wikimedia pour créer une liste d'espèces",
@@ -74,11 +116,11 @@ const i18n = createI18n({
         "Votre nom d'utilisateur Wikimedia (ex: BeastsWatcher)",
       'wikimedia-username-input-prompt': "Saisissez votre nom d'utilisateur Wikimedia",
       'settings-userscript-message':
-        'Pour une expérience beaucoup plus fluide sur Wikipedia, <a href="https://meta.wikimedia.org/wiki/Special:MyPage/global.js&editintro=WikiNaturalist%2FUserscript">ajoutez le script utilisateur forager</a>, puis suivez l\'écureuil rouge.',
+        'Pour une expérience beaucoup plus fluide sur Wikipedia, <a href="https://meta.wikimedia.org/wiki/Special:MyPage/global.js&editintro=WikiDex%2FUserscript">ajoutez le script utilisateur forager</a>, puis suivez l\'écureuil rouge.',
     },
     es: {
       'app-install': 'Instalar',
-      'app-title-wikinaturalist': 'WikiNaturalist',
+      'app-title-wikidex': 'WikiDex',
       'app-title-wikidex': 'WikiDex',
       'app-tagline': 'Galería de la biodiversidad de su barrio, potenciada por Wikimedia.',
       'settings-title': 'Configuración',
@@ -110,11 +152,11 @@ const i18n = createI18n({
       'settings-accounts-wikimedia-placeholder':
         'Su nombre de usuario de Wikimedia (ej: BeastsWatcher)',
       'settings-userscript-message':
-        'Para una experiencia mucho más fluida en Wikipedia, <a href="https://meta.wikimedia.org/wiki/Special:MyPage/global.js&editintro=WikiNaturalist%2FUserscript">agregue el script de usuario forager</a>, luego siga a la ardilla roja.',
+        'Para una experiencia mucho más fluida en Wikipedia, <a href="https://meta.wikimedia.org/wiki/Special:MyPage/global.js&editintro=WikiDex%2FUserscript">agregue el script de usuario forager</a>, luego siga a la ardilla roja.',
     },
     zh: {
       'app-install': '安装',
-      'app-title-wikinaturalist': 'WikiNaturalist',
+      'app-title-wikidex': 'WikiDex',
       'app-title-wikidex': 'WikiDex',
       'app-tagline': '您的社区生物多样性画廊，维基媒体加持。',
       'settings-title': '设置',
@@ -144,11 +186,11 @@ const i18n = createI18n({
       'settings-accounts-wikimedia-label': '维基用户名',
       'settings-accounts-wikimedia-placeholder': '您的维基媒体用户名 (例如: BeastsWatcher)',
       'settings-userscript-message':
-        '为了在维基百科上获得更流畅的体验，<a href="https://meta.wikimedia.org/wiki/Special:MyPage/global.js&editintro=WikiNaturalist%2FUserscript">添加forager用户脚本</a>，然后跟随红松鼠。',
+        '为了在维基百科上获得更流畅的体验，<a href="https://meta.wikimedia.org/wiki/Special:MyPage/global.js&editintro=WikiDex%2FUserscript">添加forager用户脚本</a>，然后跟随红松鼠。',
     },
     ko: {
       'app-install': '설치',
-      'app-title-wikinaturalist': 'WikiNaturalist',
+      'app-title-wikidex': 'WikiDex',
       'app-title-wikidex': 'WikiDex',
       'app-tagline': '위키미디어로 강화된 당신의 동네 생물다양성 갤러리.',
       'settings-title': '설정',
@@ -178,11 +220,11 @@ const i18n = createI18n({
       'settings-accounts-wikimedia-label': '위키미디어',
       'settings-accounts-wikimedia-placeholder': '위키미디어 사용자명 (예: BeastsWatcher)',
       'settings-userscript-message':
-        '위키백과에서 훨씬 더 원활한 경험을 위해 <a href="https://meta.wikimedia.org/wiki/Special:MyPage/global.js&editintro=WikiNaturalist%2FUserscript">forager 사용자 스크립트를 추가</a>한 다음 빨간 다람쥐를 따라가세요.',
+        '위키백과에서 훨씬 더 원활한 경험을 위해 <a href="https://meta.wikimedia.org/wiki/Special:MyPage/global.js&editintro=WikiDex%2FUserscript">forager 사용자 스크립트를 추가</a>한 다음 빨간 다람쥐를 따라가세요.',
     },
     ja: {
       'app-install': 'インストール',
-      'app-title-wikinaturalist': 'WikiNaturalist',
+      'app-title-wikidex': 'WikiDex',
       'app-title-wikidex': 'WikiDex',
       'app-tagline': 'あなたの地域の生物多様性ギャラリー、ウィキメディアでパワーアップ。',
       'settings-title': '設定',
@@ -212,11 +254,11 @@ const i18n = createI18n({
       'settings-accounts-wikimedia-label': 'ウィキメディア',
       'settings-accounts-wikimedia-placeholder': 'ウィキメディアのユーザー名（例：BeastsWatcher）',
       'settings-userscript-message':
-        'ウィキペディアでよりスムーズな体験をするために、<a href="https://meta.wikimedia.org/wiki/Special:MyPage/global.js&editintro=WikiNaturalist%2FUserscript">foragerユーザースクリプトを追加</a>してから、赤いリスを追ってください。',
+        'ウィキペディアでよりスムーズな体験をするために、<a href="https://meta.wikimedia.org/wiki/Special:MyPage/global.js&editintro=WikiDex%2FUserscript">foragerユーザースクリプトを追加</a>してから、赤いリスを追ってください。',
     },
     pl: {
       'app-install': 'Zainstaluj',
-      'app-title-wikinaturalist': 'WikiNaturalist',
+      'app-title-wikidex': 'WikiDex',
       'app-title-wikidex': 'WikiDex',
       'app-tagline': 'Galeria bioróżnorodności Twojej okolicy, wzmocniona przez Wikimedię.',
       'settings-title': 'Ustawienia',
@@ -247,9 +289,41 @@ const i18n = createI18n({
       'settings-accounts-wikimedia-placeholder':
         'Twoja nazwa użytkownika Wikimedia (np. BeastsWatcher)',
       'settings-userscript-message':
-        'Aby uzyskać znacznie płynniejsze doświadczenie w Wikipedii, <a href="https://meta.wikimedia.org/wiki/Special:MyPage/global.js&editintro=WikiNaturalist%2FUserscript">dodaj skrypt użytkownika forager</a>, a następnie podążaj za czerwoną wiewiórką.',
+        'Aby uzyskać znacznie płynniejsze doświadczenie w Wikipedii, <a href="https://meta.wikimedia.org/wiki/Special:MyPage/global.js&editintro=WikiDex%2FUserscript">dodaj skrypt użytkownika forager</a>, a następnie podążaj za czerwoną wiewiórką.',
     },
   },
 })
+
+/** Locales with translations */
+export const supportedLocales = Object.keys(i18n.global.messages.value)
+
+/** 'fr', 'FR' or 'fr-CA' --> 'fr'; null when the language isn't supported */
+export function resolveLocale(code) {
+  const base = String(code || '')
+    .toLowerCase()
+    .split(/[-_]/)[0]
+  return supportedLocales.includes(base) ? base : null
+}
+
+// Initial language, in order: ?uselang= in the URL, language saved by the selector, English.
+// Resolved here, before the app mounts, so the first render (and any list or card fetched
+// for it) already uses the right language, even when the language selector isn't shown.
+function initialLocale() {
+  const hashQuery = new URLSearchParams(window.location.hash.split('?')[1] || '')
+  const searchQuery = new URLSearchParams(window.location.search)
+  let saved = null
+  try {
+    saved = localStorage.getItem('preferred-locale')
+  } catch {
+    // storage unavailable
+  }
+  return (
+    resolveLocale(hashQuery.get('uselang')) ||
+    resolveLocale(searchQuery.get('uselang')) ||
+    resolveLocale(saved) ||
+    'en'
+  )
+}
+i18n.global.locale.value = initialLocale()
 
 export default i18n
