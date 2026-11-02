@@ -239,7 +239,11 @@ onBeforeUnmount(() => {
   transition: none;
 }
 
+/* The card may be taller than the slide: the slide then scrolls vertically (the card's own
+   `height: 100%` would clip its content instead) */
 .carousel-slide :deep(.card) {
+  height: auto;
+  min-height: 100%;
   max-width: 720px;
   margin: 0 auto;
 }
