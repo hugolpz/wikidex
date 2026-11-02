@@ -3,7 +3,7 @@
     <div class="topbar-container">
       <router-link :to="homeRoute" class="topbar-title">
         <h1 v-if="subdomainType === 'wikidex'">WikiDex</h1>
-        <h1 v-else>WikiNaturalist</h1>
+        <h1 v-else>WikiDex</h1>
         <p class="tagline">{{ $t('app-tagline') }}</p>
       </router-link>
 
@@ -11,7 +11,8 @@
         <UsernameInput />
         <LanguageSelect />
         <InstallButton />
-        <CompactButton />
+        <SearchButton />
+        <ViewsSelector />
         <EditDataButton
           page="Special:MyPage/WikiDex"
           editintro="WikiDex/Guideline"
@@ -41,7 +42,8 @@ import LanguageSelect from './LanguageSelect.vue'
 import UsernameInput from './UsernameInput.vue'
 import EditDataButton from './EditDataButton.vue'
 import InstallButton from './InstallButton.vue'
-import CompactButton from './CompactButton.vue'
+import ViewsSelector from './ViewsSelector.vue'
+import SearchButton from './SearchButton.vue'
 import { useSettingsStore } from '@/stores/settings'
 import { cdxIconSettings } from '@wikimedia/codex-icons'
 
@@ -56,13 +58,13 @@ const homeRoute = computed(() => {
 
 /**
  * Detects which subdomain type the app is running on
- * @returns {'wikinaturalist' | 'wikidex' | 'none'}
+ * @returns {'wikidex' | 'wikidex' | 'none'}
  */
 const detectSubdomain = () => {
   const hostname = window.location.hostname.toLowerCase()
 
-  if (hostname.includes('wikinaturalist')) {
-    return 'wikinaturalist'
+  if (hostname.includes('wikidex')) {
+    return 'wikidex'
   } else if (hostname.includes('wikidex')) {
     return 'wikidex'
   } else {
