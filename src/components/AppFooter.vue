@@ -8,6 +8,11 @@
         </span>
       </div>
 
+      <div ref="counterEl" class="footer-center">
+        <span id="tc-views"></span>
+        <span id="tc-sessions"></span>
+      </div>
+
       <div class="footer-right">
         <a
           href="https://github.com/hugolpz/wikidex/"
@@ -38,7 +43,17 @@
 
 <script setup>
 // Component name: AppFooter (multi-word as required)
-// No props or reactive data needed for this component
+import { ref, onMounted } from 'vue'
+
+const counterEl = ref(null)
+
+// Vue templates can't hold <script> tags, so inject the Toolforge counter at mount
+onMounted(() => {
+  const script = document.createElement('script')
+  script.src =
+    'https://toolcounter.toolforge.org/embed.js.php?tool=wikidex&page=home&style=badge'
+  counterEl.value?.appendChild(script)
+})
 </script>
 
 <style scoped>
@@ -84,6 +99,14 @@
 
 .profile-image:hover {
   transform: scale(1.05);
+}
+
+.footer-center {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #666;
 }
 
 .footer-right {
