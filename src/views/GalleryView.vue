@@ -51,6 +51,7 @@
               v-for="item in collection.list"
               :key="item.binomial"
               :binomial-name="item.binomial"
+              :qid="item.qid"
               :group="item.category || item.group || 'unknown'"
               :compact="settings.compactView"
             />

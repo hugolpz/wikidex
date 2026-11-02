@@ -157,6 +157,10 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  qid: {
+    type: String,
+    default: null,
+  },
   group: {
     type: String,
     default: 'plant',
@@ -213,7 +217,7 @@ async function loadData() {
   error.value = null
 
   try {
-    const data = await fetchCardData(props.binomialName, locale.value)
+    const data = await fetchCardData(props.binomialName, locale.value, props.qid)
     cardData.value = data
   } catch (err) {
     error.value = t('status-loading-list-error')

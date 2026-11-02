@@ -5,14 +5,39 @@
  * @returns {Promise<Object>} Item data including taxon name, images, and descriptions
  */
 import { assessCategoryMembershipWP } from './assessCategoryNLP.js'
+import { throttledFetch } from './throttledFetch.js'
 
-export async function fetchCardData(binomialName, locale = 'en') {
+const CACHE_PREFIX = 'wikidex:card:'
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000
+
+function readCache(key) {
+  try {
+    const entry = JSON.parse(localStorage.getItem(key))
+    return entry && Date.now() - entry.time < CACHE_TTL_MS ? entry.data : null
+  } catch {
+    return null
+  }
+}
+
+function writeCache(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify({ time: Date.now(), data }))
+  } catch {
+    // storage full or unavailable: ignore
+  }
+}
+
+export async function fetchCardData(binomialName, locale = 'en', qid = null) {
+  const cacheKey = `${CACHE_PREFIX}${locale}:${binomialName}`
+  const cached = readCache(cacheKey)
+  if (cached) return cached
+
   try {
     // Clean binomial name (remove parenthetical notes)
     const cleanName = binomialName.replace(/\s*\([^)]*\)/, '').trim()
 
     // Fetch data from Wikidata
-    const wikidataData = await fetchWikidataInfo(cleanName, locale)
+    const wikidataData = await fetchWikidataInfo(cleanName, locale, qid)
 
     // Fetch long description from Wikipedia
     const wikipediaData = await fetchWikipediaDescription(cleanName, locale)
@@ -20,7 +45,7 @@ export async function fetchCardData(binomialName, locale = 'en') {
     // Assess the category
     const assessedCategory = await assessCategoryMembershipWP(cleanName, 'en')
 
-    return {
+    const result = {
       binomialName: cleanName,
       taxonName: wikidataData.taxonName || cleanName,
       commonName: wikidataData.commonName || null,
@@ -34,6 +59,9 @@ export async function fetchCardData(binomialName, locale = 'en') {
       gbifId: wikidataData.gbifId || null,
       assessedGroup: assessedCategory, // Add the assessed category
     }
+    // Only cache complete results, not the empty ones produced by failed requests
+    if (result.wikidataId) writeCache(cacheKey, result)
+    return result
   } catch (error) {
     console.error(`Error fetching data for ${binomialName}:`, error)
     return {
@@ -56,33 +84,59 @@ export async function fetchCardData(binomialName, locale = 'en') {
 /**
  * Fetches Wikidata information for an item
  */
-async function fetchWikidataInfo(binomialName, locale = 'en') {
+async function fetchWikidataInfo(binomialName, locale = 'en', qid = null) {
   try {
-    // Search for the entity by taxon name (P225)
-    const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(binomialName)}&language=${locale}&format=json&origin=*`
+    const wd = 'https://www.wikidata.org/w/api.php'
+    let entityId = null
+    let shortDescription = null
+    let entityData = null
 
-    const searchResponse = await fetch(searchUrl)
-    const searchData = await searchResponse.json()
-
-    if (!searchData.search || searchData.search.length === 0) {
-      return {
-        taxonName: binomialName,
-        commonName: null,
-        image: null,
-        rangeMap: null,
-        description: null,
-        gbifId: null,
+    if (qid) {
+      // Known Wikidata id: single request, no name ambiguity
+      const idUrl = `${wd}?action=wbgetentities&ids=${qid}&props=claims|labels|descriptions&languages=${locale}&format=json&origin=*`
+      const idData = await (await throttledFetch(idUrl)).json()
+      const known = idData.entities?.[qid]
+      if (known && !known.missing) {
+        entityId = qid
+        shortDescription = known.descriptions?.[locale]?.value || null
+        entityData = idData
       }
     }
 
-    const entityId = searchData.search[0].id
-    const shortDescription = searchData.search[0].description || null
+    // Fast path: resolve through the Wikipedia sitelink, in a single request
+    const sitelinkUrl = `${wd}?action=wbgetentities&sites=${locale}wiki&titles=${encodeURIComponent(binomialName)}&props=claims|labels|descriptions&languages=${locale}&format=json&origin=*`
+    const sitelinkData = entityId ? null : await (await throttledFetch(sitelinkUrl)).json()
+    const found = sitelinkData
+      ? Object.values(sitelinkData.entities || {}).find((e) => e.id && !e.missing)
+      : null
+    if (entityId) {
+      // already resolved from the qid
+    } else if (found) {
+      entityId = found.id
+      shortDescription = found.descriptions?.[locale]?.value || null
+      entityData = sitelinkData
+    } else {
+      // Fallback: search the entity by name, then fetch its claims
+      const searchUrl = `${wd}?action=wbsearchentities&search=${encodeURIComponent(binomialName)}&language=${locale}&format=json&origin=*`
+      const searchData = await (await throttledFetch(searchUrl)).json()
 
-    // Get entity data with claims
-    const entityUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${entityId}&props=claims|labels&languages=${locale}&format=json&origin=*`
+      if (!searchData.search || searchData.search.length === 0) {
+        return {
+          taxonName: binomialName,
+          commonName: null,
+          image: null,
+          rangeMap: null,
+          description: null,
+          gbifId: null,
+        }
+      }
 
-    const entityResponse = await fetch(entityUrl)
-    const entityData = await entityResponse.json()
+      entityId = searchData.search[0].id
+      shortDescription = searchData.search[0].description || null
+
+      const entityUrl = `${wd}?action=wbgetentities&ids=${entityId}&props=claims|labels&languages=${locale}&format=json&origin=*`
+      entityData = await (await throttledFetch(entityUrl)).json()
+    }
 
     const entity = entityData.entities[entityId]
     const claims = entity.claims || {}
@@ -187,7 +241,7 @@ export async function fetchWikipediaDescription(binomialName, locale = 'en') {
   try {
     const url = `https://${locale}.wikipedia.org/api/rest_v1/page/mobile-html/${encodeURIComponent(binomialName)}`
 
-    const response = await fetch(url)
+    const response = await throttledFetch(url)
     if (!response.ok) {
       return null
     }

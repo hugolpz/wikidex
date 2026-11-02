@@ -159,6 +159,30 @@ export function wikitextFilter(wikitext) {
 }
 
 /**
+ * Parses one list item: `[Annotation] Binomial name (Qid)`
+ * Anything in square brackets (e.g. a common name) is ignored. The `[...]` and `(Qid)`
+ * parts are optional and may appear in any order; a binomial wrapped in parentheses,
+ * e.g. `[Common] (Binomial) (Qid)`, is accepted too.
+ * @param {string} item - The item text, without its leading list marker
+ * @returns {{binomial: string, qid?: string}}
+ */
+export function parseListItem(item) {
+  let rest = item.trim()
+  const result = {}
+
+  const qid = rest.match(/\s*\((Q\d+)\)/)
+  if (qid) {
+    result.qid = qid[1]
+    rest = rest.replace(qid[0], ' ')
+  }
+  rest = rest.replace(/\s*\[[^\]]*\]/g, ' ')
+  rest = rest.trim()
+  const wrapped = rest.match(/^\((.+)\)$/)
+  result.binomial = wrapped ? wrapped[1].trim() : rest
+  return result
+}
+
+/**
  * Parses wikitext in collection-based format to extract collection-based datalist data
  * Expected format:
  * == collection Name 1 ==
@@ -216,11 +240,7 @@ export function parseWikitextDatalist(wikitext) {
       const itemList = listItems.filter((item) => !item.match(/^\{.+\}$/))
 
       // Convert item list to datalist format
-      const names = itemList
-        .filter((item) => item.length > 0)
-        .map((item) => ({
-          binomial: item.trim(),
-        }))
+      const names = itemList.filter((item) => item.length > 0).map((item) => parseListItem(item))
 
       // Only add collection if it has items
       if (names.length > 0) {
