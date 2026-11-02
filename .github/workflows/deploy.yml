@@ -113,10 +113,10 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > id_rsa
           chmod 600 id_rsa
 
-      - name: Clean and redeploy Toolforge public_html directory (wikinaturalist)
+      - name: Clean and redeploy Toolforge public_html directory (wikidex)
         run: |
-          ssh -T -i id_rsa -o StrictHostKeyChecking=no ${{ secrets.TOOLFORGE_USERNAME }}@${{ secrets.TOOLFORGE_HOST }} "cd /data/project/wikinaturalist/public_html && find . -mindepth 1 ! -name '.htaccess' -delete"
-          rsync -avz --no-perms --omit-dir-times --delete --exclude='.htaccess' -e "ssh -T -i id_rsa -o StrictHostKeyChecking=no" dist/ ${{ secrets.TOOLFORGE_USERNAME }}@${{ secrets.TOOLFORGE_HOST }}:/data/project/wikinaturalist/public_html/
+          ssh -T -i id_rsa -o StrictHostKeyChecking=no ${{ secrets.TOOLFORGE_USERNAME }}@${{ secrets.TOOLFORGE_HOST }} "cd /data/project/wikidex/public_html && find . -mindepth 1 ! -name '.htaccess' -delete"
+          rsync -avz --no-perms --omit-dir-times --delete --exclude='.htaccess' -e "ssh -T -i id_rsa -o StrictHostKeyChecking=no" dist/ ${{ secrets.TOOLFORGE_USERNAME }}@${{ secrets.TOOLFORGE_HOST }}:/data/project/wikidex/public_html/
 
       # wikidex runs as a Node webservice (server.js serves dist/ and proxies GBIF,
       # see TOOLFORGE_DEPLOYMENT.md). Toolforge runs `npm start` from ~/www/js.
