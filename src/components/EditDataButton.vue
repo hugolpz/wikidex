@@ -3,16 +3,16 @@
     :href="editUrl"
     target="_blank"
     rel="noopener noreferrer"
-    class="edit-data-button"
+    class="footer-link edit-data-button"
     :title="hasUsername ? $t('link-edit-list-logged-in') : $t('link-edit-list-logged-out')"
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"
       xmlns:xlink="http://www.w3.org/1999/xlink"
-      width="20"
-      height="20"
+      width="24"
+      height="24"
       viewBox="0 0 20 20"
-      class="edit-icon"
+      class="footer-icon edit-icon"
     >
       <g v-html="cdxIconEdit"></g>
     </svg>
@@ -63,33 +63,10 @@ const editUrl = computed(() => {
 
 <style scoped>
 .edit-data-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  transition: background-color 0.2s;
-  text-decoration: none;
   color: inherit;
-}
-
-.edit-data-button:hover {
-  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .edit-icon {
   fill: currentColor;
-}
-
-@media (max-width: 480px) {
-  .edit-data-button {
-    padding: 0.4rem;
-  }
-
-  .edit-icon {
-    width: 18px;
-    height: 18px;
-  }
 }
 </style>
